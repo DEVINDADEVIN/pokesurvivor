@@ -1,0 +1,28 @@
+# Creates a paid service only when the owner imports and approves this Blueprint.
+services:
+  - type: web
+    name: pokesurvivor-tournament
+    runtime: node
+    plan: starter
+    buildCommand: npm ci --prefix server && node tools/build.js && node tools/prepare-dist.cjs
+    startCommand: node server/index.mjs
+    healthCheckPath: /api/tournament/board
+    disk:
+      name: tournament-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 24.21.0
+      - key: DATABASE_PATH
+        value: /var/data/tournament.sqlite
+      - key: PUBLIC_ORIGIN
+        sync: false
+      - key: PAYOUTS_ENABLED
+        value: "false"
+      - key: SCORE_VERIFIER_READY
+        value: "false"
+      - key: SOLANA_CLUSTER
+        value: devnet
+      - key: MAINNET_PAYMENTS_ENABLED
+        value: "false"

@@ -1,0 +1,4 @@
+Generated using the built-in image generation tool.
+
+Prompt:
+Use case: logo-brand. Create a polished original logo for the browser pixel-art survival game PokéSurvivor. Transparent background. Exact text: "PokéSurvivor" (accent on é), no other text. Distinctive custom block lettering with crisp pixel-stepped edges, readable at small game-menu size, warm gold and ivory faces with deep midnight-blue outlines, subtle restrained dimensional shading. Integrate a compact dungeon-survival crest with a small luminous emerald crystal, suggesting exploration and endurance. Strong horizontal lockup, centered with comfortable padding, approximately 2:1 composition. Fits an existing retro game UI with dark blue panels and forest terrain. Create a new visual identity rather than reproducing the official Pokémon wordmark. No existing Pokémon characters, no scenery, no mockup, no watermark, no background panel. Clean production-ready raster logo with genuine alpha transparency.

@@ -136,6 +136,7 @@ G.Game = (() => {
     deathT = 0;
 
     state = 'playing';
+    if (G.Tournament) G.Tournament.start(!!coop);
   }
 
   function quitRun() {
@@ -269,6 +270,7 @@ G.Game = (() => {
 
   function endRun(dead = true) {
     if (state === 'over' || !pl) return;
+    if (G.Tournament) G.Tournament.finish(time, pl.kills);
     const coop = !!pl.uid;                    // sólo las partidas en grupo le ponen uid
     const wasHost = !!pl.coopHost;
     const team = coop ? G.Coop.members.slice() : [];
@@ -554,6 +556,7 @@ G.Game = (() => {
       return;
     }
     time += dt;
+    if (G.Tournament) G.Tournament.sample(time, pl.kills);
 
     const b = Math.floor(time / 240);
     if (b !== biome && !G.Rift.inArena) {
