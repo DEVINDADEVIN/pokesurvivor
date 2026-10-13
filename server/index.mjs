@@ -10,7 +10,7 @@ import {PublicKey} from '@solana/web3.js';
 import {Tournament} from './core.mjs';
 import {Payouts,solanaAdapter} from './payouts.mjs';
 const env=process.env,port=Number(env.PORT||8787),origin=env.PUBLIC_ORIGIN||`http://localhost:${port}`;
-const allowedOrigins=new Set([origin,...(env.RAILWAY_PUBLIC_DOMAIN?['https://'+env.RAILWAY_PUBLIC_DOMAIN]:[])]);
+const allowedOrigins=new Set([origin,'https://pokesurvivor-tournament-production.up.railway.app',...(env.RAILWAY_PUBLIC_DOMAIN?['https://'+env.RAILWAY_PUBLIC_DOMAIN]:[])]);
 const owner=env.ADMIN_WALLET||OWNER;
 const t=new Tournament(env.DATABASE_PATH||'tournament.sqlite');
 const secret=env.SCORE_VERIFIER_SECRET||'';
