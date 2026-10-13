@@ -1,7 +1,7 @@
 import {settings,committed} from './admin.mjs';
-import {Connection,Keypair,PublicKey,SystemProgram,Transaction} from '@solana/web3.js';
+import {Connection,PublicKey,SystemProgram,Transaction} from '@solana/web3.js';
 import bs58 from 'bs58';
-import {readFileSync} from 'node:fs';
+import {loadSigner} from './signer.mjs';
 // The signed transaction is durably stored BEFORE broadcasting. A retry always
 // uses the identical bytes/signature. Ambiguous expiry requires reconciliation,
 // never an automatic replacement transfer that might pay a winner twice.
@@ -45,14 +45,13 @@ export class Payouts {
 }
 export async function solanaAdapter(env){
   if(!['devnet','mainnet-beta'].includes(env.SOLANA_CLUSTER))throw new Error('Set SOLANA_CLUSTER explicitly');
-  if(!env.SOLANA_RPC_URL||!env.SOLANA_KEYPAIR_FILE)throw new Error('RPC and server-only keypair file required');
+  if(!env.SOLANA_RPC_URL)throw new Error('Server RPC URL required');
   const connection=new Connection(env.SOLANA_RPC_URL,'finalized');
   const genesis=await connection.getGenesisHash();
   const expected=env.SOLANA_CLUSTER==='devnet'?'EtWTRABZaYq6iMfeYKouRu166VU2xqa1':'5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
   if(genesis!==expected)throw new Error('RPC cluster does not match configuration');
   if(env.SOLANA_CLUSTER==='mainnet-beta'&&env.MAINNET_PAYMENTS_ENABLED!=='true')throw new Error('Mainnet payouts are disabled');
-  const key=Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(env.SOLANA_KEYPAIR_FILE,'utf8'))));
-  if(env.TREASURY_WALLET&&key.publicKey.toBase58()!==env.TREASURY_WALLET)throw new Error('Treasury signer does not match configured public wallet');
+  const key=loadSigner(env);
   return{
     async prepare(winners){
       const {blockhash,lastValidBlockHeight}=await connection.getLatestBlockhash('finalized');

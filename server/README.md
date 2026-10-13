@@ -79,3 +79,22 @@ private key or recovery phrase in chat. The panel cannot enable payments or set
 secrets. Deployment, a trusted gameplay verifier, secure signing configuration,
 and a funded treasury remain prerequisites; this panel alone does not activate
 real rewards. Static Sites hosting does not run this Node backend or `/dev`.
+
+
+### Railway signing secret (not an activation step)
+
+Use the authenticated Dev panel's **Check payment setup** to see missing configuration.
+Configure `TREASURY_WALLET` as the exact public address selected for payouts.
+`SOLANA_PRIVATE_KEY` supports a base58 secret key or a JSON array of 64 bytes,
+provided directly by the owner in Railway Variables and sealed immediately.
+Never use a recovery phrase. Do not configure both this variable and
+`SOLANA_KEYPAIR_FILE`. No secret is requested by or returned to the browser.
+Parser errors are generic and cannot echo the secret. Payout startup rejects a
+key whose public address differs from the expected treasury.
+
+Do not enable PAYOUTS_ENABLED, MAINNET_PAYMENTS_ENABLED or SCORE_VERIFIER_READY:
+the current game still lacks an authoritative score verifier. The existing HMAC
+endpoint authenticates an external verifier; it does NOT verify gameplay.
+A funded devnet end-to-end transaction test has not been completed.
+The 0.4 SOL application cap cannot protect unrelated wallet funds if its secret
+is compromised. Signing authority covers the entire wallet.

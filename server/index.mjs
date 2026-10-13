@@ -1,3 +1,4 @@
+import {readiness} from './readiness.mjs';
 import {OWNER,adminState,updateSettings} from './admin.mjs';
 import http from 'node:http';
 import {readFile,stat} from 'node:fs/promises';
@@ -50,6 +51,7 @@ const server=http.createServer(async(req,res)=>{
     const ip=req.socket.remoteAddress||'unknown',r=rates.get(ip)||{count:0,expires:Date.now()+60000};r.count++;rates.set(ip,r);
     if(r.count>240){reply(res,429,{error:'Too many requests; wait a minute'});return;}
     if(req.method==='GET'&&path==='/api/tournament/board'){reply(res,200,{...t.board(),notice:enabled?`${env.SOLANA_CLUSTER.toUpperCase()} — only independently verified scores qualify. Payments are marked paid after finalization.`:'TEST MODE — no SOL payments are active. Scores are provisional until independently verified. Treasury and verifier setup required.'});return;}
+    if(path==='/api/tournament/admin/readiness'&&req.method==='GET'){admin(req);reply(res,200,readiness(env,owner));return;}
     if(path==='/api/tournament/admin'&&req.method==='GET'){
       admin(req);reply(res,200,{...adminState(t),paymentsEnabled:enabled,treasury:env.TREASURY_WALLET||owner});return;
     }

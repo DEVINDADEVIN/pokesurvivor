@@ -26,6 +26,8 @@ test('HTTP wallet proof, replay rejection, origin isolation and payment-disabled
     assert.equal((await call('/challenge',{wallet:Keypair.generate().publicKey.toBase58(),admin:true})).status,400);
     const ac=(await call('/challenge',{wallet,admin:true})).data;
     const aa=await call('/auth',{id:ac.id,signature:Buffer.from(nacl.sign.detached(Buffer.from(ac.message),key.secretKey)).toString('base64')});
+    assert.equal((await call('/admin/readiness',null,auth.data.token)).status,400);
+    const setup=await call('/admin/readiness',null,aa.data.token);assert.equal(setup.data.realPaymentsReady,false);assert.equal(setup.data.gameplayVerification,'not implemented');
     const initial=await call('/admin',null,aa.data.token);assert.equal(initial.data.budget,400000000);
     const update={revision:initial.data.revision,budget:500000000,prizes:[12000000,6000000,3000000]};
     assert.equal((await call('/admin',update,auth.data.token)).status,400);
