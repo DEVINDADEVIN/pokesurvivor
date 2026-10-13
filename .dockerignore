@@ -1,0 +1,12 @@
+.git
+**/node_modules
+dist
+tools/cache
+.env
+.env.*
+**/.env
+**/.env.*
+**/*.sqlite*
+**/*.key
+**/*.pem
+server/secrets
