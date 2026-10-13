@@ -584,3 +584,5 @@ G.I18n.add({
   "Tranquilo": "Relaxed",
   "Caótico": "Chaotic"
 });
+
+G.I18n.add({'Nv.{x}': 'Lv.{x}'});

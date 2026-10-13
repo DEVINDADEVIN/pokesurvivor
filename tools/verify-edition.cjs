@@ -10,7 +10,7 @@ sandbox.window=sandbox;vm.createContext(sandbox);
 for(const f of ['js/core/i18n.js','js/data/lang-en.js','js/core/firebase-config.js','js/core/db.js'])vm.runInContext(read(f),sandbox,{filename:f});
 const {G}=sandbox;
 assert.equal(G.I18n.lang,'en');assert.equal(sandbox.document.documentElement.lang,'en');
-assert.equal(G.T('Nv. 12'),'Lv. 12');assert.equal(G.T('Impulsivo'),'Impulsive');assert.equal(G.T('Buscar por nombre'),'Search by name');
+assert.equal(G.T('Nv. 12'),'Lv. 12');assert.equal(G.T('Nv.1 > 2'),'Lv.1 > 2');assert.equal(G.T('Impulsivo'),'Impulsive');assert.equal(G.T('Buscar por nombre'),'Search by name');
 assert.equal(G.FIREBASE_CONFIG,null);assert.equal(G.TURN_URL,'');
 assert(!read('js/app.min.js').includes('turn.pokesurvivor.com'));
 assert(!read('js/app.min.js').includes('pokesurvivor-free'));
