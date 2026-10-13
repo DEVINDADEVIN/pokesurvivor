@@ -1,3 +1,4 @@
+import {devnetTest} from './devnet-test.mjs';
 import {readiness} from './readiness.mjs';
 import {OWNER,adminState,updateSettings} from './admin.mjs';
 import http from 'node:http';
@@ -22,6 +23,7 @@ const adapter=enabled?await solanaAdapter({...env,TREASURY_WALLET:env.TREASURY_W
 const dailyCap=Number(env.DAILY_PAYOUT_CAP_LAMPORTS||2736000000);
 if(!Number.isSafeInteger(dailyCap)||dailyCap<0)throw new Error('Invalid daily payout cap');
 const payouts=new Payouts(t,adapter,{enabled,dailyCap});
+const runDevnetTest=devnetTest(t,{...env,TREASURY_WALLET:env.TREASURY_WALLET||owner});
 const root=resolve(fileURLToPath(new URL('../dist/',import.meta.url)));
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.ogg':'audio/ogg','.mp3':'audio/mpeg','.woff2':'font/woff2','.ico':'image/x-icon'};
@@ -50,7 +52,7 @@ const server=http.createServer(async(req,res)=>{
     }
     const ip=req.socket.remoteAddress||'unknown',r=rates.get(ip)||{count:0,expires:Date.now()+60000};r.count++;rates.set(ip,r);
     if(r.count>240){reply(res,429,{error:'Too many requests; wait a minute'});return;}
-    if(req.method==='GET'&&path==='/api/tournament/board'){reply(res,200,{...t.board(),notice:enabled?`${env.SOLANA_CLUSTER.toUpperCase()} — only independently verified scores qualify. Payments are marked paid after finalization.`:'TEST MODE — no SOL payments are active. Scores are provisional until independently verified. Treasury and verifier setup required.'});return;}
+    if(req.method==='GET'&&path==='/api/tournament/board'){reply(res,200,{...t.board(),notice:enabled?`${env.SOLANA_CLUSTER.toUpperCase()} â€” only independently verified scores qualify. Payments are marked paid after finalization.`:'TEST MODE â€” no SOL payments are active. Scores are provisional until independently verified. Treasury and verifier setup required.'});return;}
     if(path==='/api/tournament/admin/readiness'&&req.method==='GET'){admin(req);reply(res,200,readiness(env,owner));return;}
     if(path==='/api/tournament/admin'&&req.method==='GET'){
       admin(req);reply(res,200,{...adminState(t),paymentsEnabled:enabled,treasury:env.TREASURY_WALLET||owner});return;
@@ -66,6 +68,7 @@ const server=http.createServer(async(req,res)=>{
     }
     if(!allowedOrigins.has(req.headers.origin))throw new Error('Invalid request origin');
     const data=JSON.parse(raw);
+    if(path==='/api/tournament/admin/devnet-test'){admin(req);reply(res,200,await runDevnetTest());return;}
     if(path==='/api/tournament/admin'){
       admin(req);t.tick();updateSettings(t,data,owner);reply(res,200,{...adminState(t),paymentsEnabled:enabled,treasury:env.TREASURY_WALLET||owner});return;
     }
