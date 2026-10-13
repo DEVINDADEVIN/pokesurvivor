@@ -5,25 +5,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PokéSurvivor — Pokémon Survival Fan Game</title>
-<meta name="description" content="Pokémon survival fan game. Survive the hordes with your partner Pokémon and explore a world of adventure.">
+<meta name="description" content="Pokémon survival fan game. Survive the hordes with your partner Pokémon, evolve your moves and climb the leaderboard.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PokéSurvivor">
 <meta property="og:title" content="PokéSurvivor — Pokémon Survival Fan Game">
-<meta property="og:description" content="Pokémon survival fan game. Survive the hordes with your partner Pokémon and explore a world of adventure.">
+<meta property="og:description" content="Pokémon survival fan game. Survive the hordes with your partner Pokémon, evolve your moves and climb the leaderboard.">
 <meta property="og:url" content="https://pokesurvivor.fun/">
-<meta property="og:image" content="https://pokesurvivor.fun/assets/branding/pokesurvivor-robinhood-banner-v1.png">
-<meta property="og:image:alt" content="PokéSurvivor logo with a glowing green feather over pixel-art forest ruins">
+<meta property="og:image" content="https://pokesurvivor.fun/assets/branding/social-card-solana.png">
+<meta property="og:image:alt" content="PokéSurvivor logo with the Solana symbol over pixel-art forest ruins">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@PokeSurvivorSol">
-<meta name="twitter:image" content="https://pokesurvivor.fun/assets/branding/pokesurvivor-robinhood-banner-v1.png">
-<meta name="twitter:image:alt" content="PokéSurvivor logo with a glowing green feather over pixel-art forest ruins">
+<meta name="twitter:image" content="https://pokesurvivor.fun/assets/branding/social-card-solana.png">
+<meta name="twitter:image:alt" content="PokéSurvivor logo with the Solana symbol over pixel-art forest ruins">
 <meta name="twitter:title" content="PokéSurvivor — Pokémon Survival Fan Game">
-<meta name="twitter:description" content="Pokémon survival fan game. Survive the hordes with your partner Pokémon and explore a world of adventure.">
+<meta name="twitter:description" content="Pokémon survival fan game. Survive the hordes with your partner Pokémon, evolve your moves and climb the leaderboard.">
 
 <link rel="manifest" href="manifest.webmanifest">
 <!-- Google sólo enseña en los resultados iconos de 48 px o múltiplos -->
-<link rel="icon" type="image/png" href="assets/branding/pokesurvivor-robinhood-avatar-v1.png">
-<link rel="apple-touch-icon" href="assets/branding/pokesurvivor-robinhood-avatar-v1.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/icons/icon-48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="assets/icons/icon-96.png">
+<link rel="icon" type="image/png" sizes="144x144" href="assets/icons/icon-144.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -33,6 +36,7 @@
 <link rel="preload" href="assets/fonts/PixelifyPS-700.ttf" as="font" type="font/ttf" crossorigin>
 
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/tournament.css">
 <link rel="stylesheet" href="css/community.css">
 <link rel="canonical" href="https://pokesurvivor.fun/"><meta name="theme-color" content="#0a1430"><script>window.PS_PAGES = true;</script></head>
 <body>
@@ -45,7 +49,7 @@
 <section id="scr-login" class="scr hidden">
   <div class="box" style="width:min(420px,100%)">
     <div class="logo">
-      <img class="brand-banner" src="assets/branding/pokesurvivor-robinhood-banner-v1.png" alt="PokéSurvivor" width="1774" height="887">
+      <div class="t1">PokéSurvivor</div>
       <div class="t2">Pokémon Survival Fan Game</div>
     </div>
     <p class="login-tag">Survive the hordes with your partner Pokémon · free, on PC and mobile</p>
@@ -118,7 +122,7 @@
 <section id="scr-menu" class="scr hidden">
   <div class="menu-left">
     <div class="logo">
-      <img class="brand-banner" src="assets/branding/pokesurvivor-robinhood-banner-v1.png" alt="PokéSurvivor" width="1774" height="887">
+      <div class="t1">PokéSurvivor</div>
       <div class="t2">Pokémon Survival Fan Game</div>
     </div>
     <div class="partner-card">
@@ -137,6 +141,7 @@
         <button class="menu-item" data-go="gacha">Gacha<small>9 regions · Pokémon and shinies</small></button>
         <button class="menu-item" data-go="goals">Missions<small id="menu-goals-sub">Missions, achievements and profile</small></button>
         <button class="menu-item" data-go="friends">Friends<small id="menu-friends-sub">Play in a group, up to 4</small></button>
+        <button class="menu-item" data-go="rank">SOL Tournament<small>10-minute rounds · Top 3 prizes</small></button>
         <button class="menu-item" data-go="settings">Settings<small>Sound, graphics, controls and account</small></button>
       </div>
     </div>
@@ -446,6 +451,6 @@
 </section>
 
 <!-- datos generados -->
-<script defer src="js/app.min.js?v=16ec8be87b"></script>
+<script defer src="js/app.min.js?v=28feaba2a5"></script>
 </body>
 </html>
