@@ -10,6 +10,7 @@ import {PublicKey} from '@solana/web3.js';
 import {Tournament} from './core.mjs';
 import {Payouts,solanaAdapter} from './payouts.mjs';
 const env=process.env,port=Number(env.PORT||8787),origin=env.PUBLIC_ORIGIN||`http://localhost:${port}`;
+const allowedOrigins=new Set([origin,...(env.RAILWAY_PUBLIC_DOMAIN?['https://'+env.RAILWAY_PUBLIC_DOMAIN]:[])]);
 const owner=env.ADMIN_WALLET||OWNER;
 const t=new Tournament(env.DATABASE_PATH||'tournament.sqlite');
 const secret=env.SCORE_VERIFIER_SECRET||'';
@@ -61,7 +62,7 @@ const server=http.createServer(async(req,res)=>{
       if(actual.length!==expected.length||!timingSafeEqual(expected,actual))throw new Error('Invalid verifier signature');
       reply(res,200,t.verify(JSON.parse(raw)));return;
     }
-    if(req.headers.origin!==origin)throw new Error('Invalid request origin');
+    if(!allowedOrigins.has(req.headers.origin))throw new Error('Invalid request origin');
     const data=JSON.parse(raw);
     if(path==='/api/tournament/admin'){
       admin(req);t.tick();updateSettings(t,data,owner);reply(res,200,{...adminState(t),paymentsEnabled:enabled,treasury:env.TREASURY_WALLET||owner});return;
@@ -69,7 +70,7 @@ const server=http.createServer(async(req,res)=>{
     if(path==='/api/tournament/challenge'){
       if(data.admin===true&&data.wallet!==owner)throw new Error('Only the developer wallet may administer rewards');
       const publicKey=new PublicKey(data.wallet);if(!PublicKey.isOnCurve(publicKey.toBytes()))throw new Error('Use a signing wallet');
-      const id=randomUUID(),expires=Date.now()+120000,message=`${data.admin===true?'Developer administration: authorize budget and prize changes for 10 minutes':'PokeSurvivor tournament sign-in'}\nOrigin: ${origin}\nWallet: ${publicKey.toBase58()}\nNonce: ${id}\nExpires: ${new Date(expires).toISOString()}\nThis signature only signs in. It does not authorize a transfer.`;
+      const id=randomUUID(),expires=Date.now()+120000,message=`${data.admin===true?'Developer administration: authorize budget and prize changes for 10 minutes':'PokeSurvivor tournament sign-in'}\nOrigin: ${req.headers.origin}\nWallet: ${publicKey.toBase58()}\nNonce: ${id}\nExpires: ${new Date(expires).toISOString()}\nThis signature only signs in. It does not authorize a transfer.`;
       t.exec('INSERT INTO challenges VALUES(?,?,?,?)',id,publicKey.toBase58(),message,expires);reply(res,200,{id,message});return;
     }
     if(path==='/api/tournament/auth'){
