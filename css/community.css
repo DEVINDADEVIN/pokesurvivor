@@ -10,3 +10,10 @@
 #contract-banner button:focus-visible{outline:2px solid #f4cc70;outline-offset:2px}
 #contract-banner .ca-feedback{position:absolute;right:8px;top:100%;background:#071725;color:#8ce9dc}
 @media(max-width:600px){:root{--ca-bar-height:64px}#contract-banner{gap:8px;padding:6px 10px;grid-template-columns:auto minmax(0,1fr) auto}#contract-banner code{font-size:11px}}
+
+.brand-banner{display:block;width:min(520px,100%);height:auto;max-height:180px;object-fit:contain;margin:0 auto 8px;border-radius:10px}
+#scr-login .brand-banner{max-height:155px}
+#contract-banner button[hidden],.community-contract button[hidden]{display:none}
+#contract-banner:has(button[hidden]){grid-template-columns:auto auto;gap:12px}
+#contract-banner:has(button[hidden]) code{color:#c3f53b;font:700 15px system-ui}
+@media(max-width:600px){#scr-menu .brand-banner{max-height:140px}}
