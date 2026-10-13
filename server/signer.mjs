@@ -14,7 +14,7 @@ export function loadSigner(env){
       bytes=Uint8Array.from(values);
     }else bytes=bs58.decode(raw);
     if(bytes.length!==64)throw Error();
-    const key=Keypair.fromSecretKey(bytes);
+    const key=Keypair.fromSecretKey(Uint8Array.from(bytes));
     if(!env.TREASURY_WALLET||key.publicKey.toBase58()!==env.TREASURY_WALLET)throw Error();
     return key;
   }catch{throw new Error('Invalid signing secret or treasury public address mismatch');}
