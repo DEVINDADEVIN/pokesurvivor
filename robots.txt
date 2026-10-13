@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pokesurvivor-english-edition.smebi.chatgpt.site/sitemap.xml

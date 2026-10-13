@@ -1,0 +1,30 @@
+const assert=require('node:assert/strict'), fs=require('fs'),path=require('path'),vm=require('vm'),{webcrypto}=require('crypto');
+const root=path.resolve(__dirname,'..');
+const read=f=>fs.readFileSync(path.join(root,f),'utf8');
+const html=read('dev.html');
+const scripts=[...html.matchAll(/<script[^>]*src="(js\/[^"]+\.js)"/g)].map(m=>m[1]);
+for(const f of scripts)new vm.Script(read(f),{filename:f});
+const data=new Map([['pse.lang','es']]);
+const sandbox={G:{},window:{},document:{documentElement:{},addEventListener(){}},location:{pathname:'/',protocol:'http:'},navigator:{language:'es-PE',languages:['es-PE']},localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)},CanvasRenderingContext2D:function(){},crypto:webcrypto,TextEncoder,Uint8Array,console,setTimeout,clearTimeout,setInterval,clearInterval,addEventListener(){}};
+sandbox.window=sandbox;vm.createContext(sandbox);
+for(const f of ['js/core/i18n.js','js/data/lang-en.js','js/core/firebase-config.js','js/core/db.js'])vm.runInContext(read(f),sandbox,{filename:f});
+const {G}=sandbox;
+assert.equal(G.I18n.lang,'en');assert.equal(sandbox.document.documentElement.lang,'en');
+assert.equal(G.T('Nv. 12'),'Lv. 12');assert.equal(G.T('Impulsivo'),'Impulsive');assert.equal(G.T('Buscar por nombre'),'Search by name');
+assert.equal(G.FIREBASE_CONFIG,null);assert.equal(G.TURN_URL,'');
+assert(!read('js/app.min.js').includes('turn.pokesurvivor.com'));
+assert(!read('js/app.min.js').includes('pokesurvivor-free'));
+assert(!read('dev.html').includes('jpieratorregrosa'));
+async function main(){
+ await G.DB.ready();assert.equal(G.DB.mode,'local');
+ assert.equal((await G.DB.register('EditionTest','test-only-pass')).ok,true);
+ G.DB.grant(4,'starter');G.DB.save.partner=4;G.DB.save.coins=321;G.DB.upgradesOf(4).hp=2;G.DB.commit();
+ await G.DB.logout();assert.equal((await G.DB.login('EditionTest','wrong-pass')).ok,false);
+ assert.equal((await G.DB.login('EditionTest','test-only-pass')).ok,true);
+ assert.equal(G.DB.save.coins,321);assert.equal(G.DB.save.partner,4);assert.equal(G.DB.upgradesOf(4).hp,2);assert(G.DB.owns(4));
+ await G.DB.logout();const saved=data.get('pse.save.editiontest');G.DB.playAsGuest();G.DB.save.coins=999;G.DB.commit();assert.equal(data.get('pse.save.editiontest'),saved);
+ assert([...data.keys()].every(k=>k.startsWith('pse.')));
+ const dexSource=read('js/data/pokedex.js');assert(dexSource.length>1000);
+ console.log(`PASS: ${scripts.length} scripts parse; English overrides Spanish browser/saved preference; translation regressions; independent endpoints; local profile save/login persistence; guest isolation.`);
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});

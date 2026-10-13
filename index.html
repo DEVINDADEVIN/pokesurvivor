@@ -1,0 +1,441 @@
+<!doctype html>
+<!-- GENERADO desde dev.html por tools/build.js: no editar a mano (se edita dev.html). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PokéSurvivor English Edition — Survival Adventure</title>
+<meta name="description" content="An independent English-only Pokémon survival fan game. Battle hordes, evolve moves and build your collection. Local profiles save on this browser.">
+
+<link rel="manifest" href="manifest.webmanifest">
+<!-- Google sólo enseña en los resultados iconos de 48 px o múltiplos -->
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="assets/icons/icon-48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="assets/icons/icon-96.png">
+<link rel="icon" type="image/png" sizes="144x144" href="assets/icons/icon-144.png">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PokéSurvivor English Edition">
+
+<link rel="preload" href="assets/fonts/PixelifyPS-400.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="assets/fonts/PixelifyPS-700.ttf" as="font" type="font/ttf" crossorigin>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="canonical" href="https://pokesurvivor-english-edition.smebi.chatgpt.site/"><meta name="theme-color" content="#0a1430"><script>window.PS_PAGES = true;</script></head>
+<body>
+
+<canvas id="game"></canvas>
+<!-- En móvil se juega en horizontal -->
+<div id="rotate" class="hidden"><div class="box center"><div id="rotate-ico"></div><h2>Rotate your phone</h2><p class="sub">PokéSurvivor is played in landscape.</p></div></div>
+
+<!-- ====== Inicio: login / registro / invitado ====== -->
+<section id="scr-login" class="scr hidden">
+  <div class="box" style="width:min(420px,100%)">
+    <div class="logo">
+      <div class="t1">PokéSurvivor</div>
+      <div class="t2">English Edition</div>
+    </div>
+    <p class="login-tag">Survive the hordes with your partner Pokémon · free, on PC and mobile</p>
+    <div class="tabs">
+      <div class="tab on" data-tab="login">Log in</div>
+      <div class="tab" data-tab="register">Sign up</div>
+    </div>
+    <p id="signup-closed" class="note center hidden"></p>
+    <form id="login-form" autocomplete="off">
+      <label for="f-user">Name</label>
+      <input id="f-user" class="field" maxlength="16" spellcheck="false">
+      <label for="f-pass">Password</label>
+      <input id="f-pass" class="field" type="password" maxlength="64">
+      <p id="login-err" class="err"></p>
+      <div class="row">
+        <button id="btn-auth" class="btn gold grow" type="submit">Log in</button>
+      </div>
+    </form>
+    <div class="row" style="margin-top:10px">
+      <button id="btn-google" class="btn google grow hidden" type="button">Sign in with Google</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="btn-guest" class="btn ghost grow" type="button">Play as guest</button>
+    </div>
+    <p class="note center" id="login-mode"></p>
+    <p class="note center"><a href="en/guide/">Guide</a> · <a href="en/pokedex/">Pokédex</a> · <a href="#" class="legal-link" data-legal>Legal notice & privacy</a></p>
+  </div>
+</section>
+
+<!-- ====== Test de personalidad ====== -->
+<section id="scr-test" class="scr dim hidden">
+  <div class="box test-box">
+    <div class="progress"><i id="test-bar"></i></div>
+    <p class="sub" id="test-count"></p>
+    <p class="q" id="test-q"></p>
+    <div class="answers" id="test-a"></div>
+  </div>
+</section>
+
+<!-- ====== Resultado del test ====== -->
+<section id="scr-result" class="scr dim hidden">
+  <div class="box result">
+    <p class="sub">Your personality is…</p>
+    <div class="trait" id="res-trait"></div>
+    <p id="res-text"></p>
+    <canvas id="res-stage" class="stage" width="200" height="150"></canvas>
+    <h3>Your partner: <span class="gold" id="res-name"></span></h3>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button id="res-ok" class="btn gold">Let's go together!</button>
+      <button id="res-other" class="btn">Choose another</button>
+    </div>
+  </div>
+</section>
+
+<!-- ====== Elegir compañero ====== -->
+<section id="scr-starters" class="scr dim hidden">
+  <div class="box wide">
+    <h2>Choose your partner</h2>
+    <p class="sub">The starters from every region, plus two more friends.</p>
+    <div class="grid" id="starter-grid"></div>
+    <div class="row between" style="margin-top:14px">
+      <button id="starter-back" class="btn ghost">Back</button>
+      <span id="starter-info" class="grow" style="color:var(--muted)"></span>
+      <button id="starter-ok" class="btn gold" disabled>Choose</button>
+    </div>
+  </div>
+</section>
+
+<!-- ====== Menú principal ====== -->
+<section id="scr-menu" class="scr hidden">
+  <div class="menu-left">
+    <div class="logo">
+      <div class="t1">PokéSurvivor</div>
+      <div class="t2">English Edition</div>
+    </div>
+    <div class="partner-card">
+      <canvas id="menu-partner" class="stage" width="260" height="200"></canvas>
+      <div class="nm" id="menu-partner-name"></div>
+      <div class="lv" id="menu-partner-info"></div>
+      <div class="seg hidden" id="menu-shiny"><button data-v="0">Normal</button><button data-v="1"></button></div>
+    </div>
+  </div>
+  <div class="menu-right">
+    <div class="box">
+      <div class="menu-list">
+        <button class="menu-item play" data-go="play">Play<small>Enter the dungeon</small></button>
+        <button class="menu-item" data-go="dex">Pokémon<small id="menu-dex-count">Your collection</small></button>
+        <button class="menu-item" data-go="upgrades">Upgrades<small>Make every run stronger</small></button>
+        <button class="menu-item" data-go="gacha">Gacha<small>9 regions · Pokémon and shinies</small></button>
+        <button class="menu-item" data-go="goals">Missions<small id="menu-goals-sub">Missions, achievements and profile</small></button>
+        <button class="menu-item" data-go="friends">Friends<small id="menu-friends-sub">Play in a group, up to 4</small></button>
+        <button class="menu-item" data-go="rank">Leaderboard<small>Who survives longest</small></button>
+        <button class="menu-item" data-go="settings">Settings<small>Sound, graphics, controls and account</small></button>
+      </div>
+    </div>
+    <div class="box" style="padding:14px 18px">
+      <div id="menu-stats" style="font-size:14px;color:var(--muted)"></div>
+    </div>
+  </div>
+</section>
+
+<div id="topbar" class="topbar hidden">
+  <div class="pill"><span class="coin"></span><span id="coins">0</span></div>
+  <div class="pill" id="tickets-pill" title="Gacha tickets"></div>
+  <div class="pill" id="user-pill"></div>
+  <button id="btn-news" class="btn small ghost news-btn" title="What's new"></button>
+  <button id="btn-support" class="btn small gold hidden" title="Support the project"></button>
+  <button id="btn-sound" class="btn small ghost" title="Sound"></button>
+  <button id="btn-full" class="btn small ghost hidden" title="Fullscreen"></button>
+  <button id="btn-settings" class="btn small ghost" title="Settings"></button>
+  <button id="btn-logout" class="btn small ghost">Log out</button>
+</div>
+<div id="sound-panel" class="box sound-panel hidden"></div>
+<div id="credits-line" class="credits-line hidden">Non-profit fan project · Sprites: SpriteCollab (CC BY-NC 4.0) · Pokémon © Nintendo/Creatures/GAME FREAK · <a href="#" class="legal-link" data-legal>Legal notice</a></div>
+
+<!-- ====== Novedades (cambios del juego) ====== -->
+<section id="scr-news" class="scr dim hidden">
+  <div class="box news-box">
+    <div class="row between"><h2>What's new</h2><button class="btn small ghost" id="news-close">Close</button></div>
+    <div id="news-body" class="news-body"></div>
+  </div>
+</section>
+
+<!-- ====== Apoyar el proyecto (donaciones) ====== -->
+<section id="scr-support" class="scr dim hidden">
+  <div class="box support">
+    <div class="row between"><h2>Support the project</h2><button class="btn small ghost" id="sup-close">Close</button></div>
+    <div id="sup-body"></div>
+  </div>
+</section>
+
+<!-- ====== Ajustes ====== -->
+<section id="scr-settings" class="scr dim hidden">
+  <div class="box settings">
+    <div class="row between"><h2>Settings</h2><button class="btn small ghost" id="set-close">Close</button></div>
+    <div class="tabs" id="set-tabs">
+      <button class="gen-tab" data-t="sound">Sound</button>
+      <button class="gen-tab" data-t="gfx">Graphics</button>
+      <button class="gen-tab" data-t="ctl">Controls</button>
+      <button class="gen-tab" data-t="acc">Account</button>
+      <button class="gen-tab" data-t="about">About</button>
+    </div>
+    <div id="set-body" class="set-body"></div>
+  </div>
+</section>
+
+<!-- ====== Aviso legal y privacidad ====== -->
+<section id="scr-legal" class="scr dim hidden">
+  <div class="box legal" style="width:min(640px,100%)">
+    <div class="row between"><h2>Legal notice</h2><button class="btn small ghost" id="legal-close">Close</button></div>
+    <h3>Fan project</h3>
+    <p><b>PokéSurvivor</b> is a game made by fans, <b>free and non-profit</b>. There are no ads, purchases or donations in this edition.</p>
+    <p>It is not affiliated with, sponsored or endorsed by Nintendo, Creatures Inc., GAME FREAK or The Pokémon Company. Pokémon and all related names and characters are trademarks and property of their respective owners.</p>
+    <h3>Cryptocurrencies</h3>
+    <p>PokéSurvivor has no official cryptocurrency, token or NFT, and its author has not created any. Any token using the game's name was created by third parties: we take no responsibility for any purchase, sale or investment you make with them, and nothing here is investment advice.</p>
+    <h3>Third-party content</h3>
+    <p>Sprites from <a href="https://github.com/PMDCollab/SpriteCollab" target="_blank" rel="noopener">SpriteCollab</a>
+      (CC BY-NC 4.0, full credits in the repository's CREDITS.md). Pokédex data from
+      <a href="https://pokeapi.co/" target="_blank" rel="noopener">PokeAPI</a>. Pixelify Sans font (OFL). The music and sound effects are original to the project.</p>
+    <h3>Independent English edition</h3><p>This edition adapts the original project by JPTER78. Original code and music: MIT; Pokémon sprites: CC BY-NC 4.0. <a id="legal-mail" href="CREDITS.md">Credits</a>.</p><p>Original source: <a id="legal-repo" href="#" target="_blank" rel="noopener"></a></p><h3>Local storage and privacy</h3><p>Profiles, collections, currency, upgrades and statistics are stored only in this browser. Clearing site data removes local progress. Guest progress is not saved. This edition has no cloud service configured and does not connect to the original game's accounts, leaderboards or multiplayer servers.</p><p>You can delete your local profile and save below.</p><div class="row">
+      <button class="btn small" id="legal-delete">Delete my account and my game</button>
+      <span id="legal-del-msg" class="note" style="margin:0"></span>
+    </div>
+  </div>
+</section>
+<div id="boot" class="boot">
+  <div class="boot-in">
+    <h1>PokéSurvivor</h1>
+    <p>A Pokémon survival game, free in your browser and on mobile.</p>
+    <p class="boot-ld">Loading…</p>
+  </div>
+</div>
+<script>document.documentElement.lang = "en";</script>
+<div id="tap-start" class="tapstart hidden">
+  <div class="boot-in">
+    <h1>PokéSurvivor</h1>
+    <p>Survive the hordes with your Pokémon partner</p>
+    <p class="tap-blink">Press to start</p>
+  </div>
+</div>
+<noscript>
+  <div class="boot noscript">
+    <div class="boot-in">
+      <h1>PokéSurvivor</h1>
+      <p>PokéSurvivor needs JavaScript to work. Please enable it to play.</p>
+      <p>A free survival fan game with 966 Pokémon from all 9 regions: choose your partner, survive the hordes, evolve your moves, take on legendaries and build your collection.</p>
+      
+    </div>
+  </div>
+</noscript>
+
+<!-- ====== Apodo (para amigos y ranking) ====== -->
+<section id="scr-nick" class="scr dim hidden">
+  <div class="box" style="width:min(440px,100%)">
+    <h2>Choose your nickname</h2>
+    <p class="sub">It's the name your friends will see and the one on the leaderboard. Your real name and Google email are never shown to anyone.</p>
+    <form id="nick-form" autocomplete="off">
+      <input id="nick-in" class="field" maxlength="16" spellcheck="false" placeholder="3-16 letters, numbers or _">
+      <p id="nick-err" class="err"></p>
+      <div class="row"><button id="nick-ok" class="btn gold grow" type="submit">Save nickname</button></div>
+    </form>
+    <div class="row" style="margin-top:8px"><button id="nick-later" class="btn ghost grow" type="button">Not now</button></div>
+  </div>
+</section>
+
+<!-- ====== Amigos ====== -->
+<section id="scr-friends" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Friends</h2>
+      <div class="row"><button id="fr-room" class="btn small gold hidden">Go to the room</button><button class="btn small ghost" data-back>Back</button></div></div>
+    <p class="sub" id="fr-me"></p>
+    <form id="fr-add" class="row" autocomplete="off">
+      <input id="fr-name" class="field grow" maxlength="16" spellcheck="false" placeholder="Your friend's nickname">
+      <button class="btn gold" type="submit" data-sfx="confirm">Add friend</button>
+    </form>
+    <p id="fr-msg" class="note"></p>
+    <div id="fr-list" class="fr-list"></div>
+  </div>
+</section>
+
+<!-- ====== Sala (partida en grupo) ====== -->
+<section id="scr-lobby" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Room</h2>
+      <div class="row"><button id="lobby-menu" class="btn small ghost">Menu</button><button id="lobby-leave" class="btn small ghost">Leave the room</button></div></div>
+    <p class="sub" id="lobby-sub"></p>
+    <div id="lobby-members" class="lobby-members"></div>
+    <h3 id="lobby-inv-title" style="margin:14px 0 6px">Invite friends</h3>
+    <div id="lobby-invite" class="fr-list"></div>
+    <div class="row" style="margin-top:14px">
+      <button id="lobby-start" class="btn gold grow">Start game</button>
+    </div>
+    <p class="note" id="lobby-note"></p>
+  </div>
+</section>
+
+<!-- ====== Ranking ====== -->
+<section id="scr-rank" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Leaderboard <span class="sub" style="font-size:15px">· survival time</span></h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="gen-tabs" id="rk-mode"></div>
+    <div class="filters" id="rk-period"></div>
+    <div class="row rk-tools">
+      <div class="filters" id="rk-scope" style="margin:0"></div>
+      <input id="rk-poke" class="field" list="rk-dl" placeholder="Filter by Pokémon (all-time)" spellcheck="false">
+      <datalist id="rk-dl"></datalist>
+      <button id="rk-clear" class="btn small ghost hidden">Clear filter</button>
+    </div>
+    <div id="rk-list" class="rk-list"></div>
+    <div id="rk-me" class="rk-me"></div>
+  </div>
+</section>
+
+<!-- ====== Misiones, logros y perfil ====== -->
+<section id="scr-goals" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Missions</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="tabs" id="goals-tabs">
+      <div class="tab on" data-tab="missions">Missions</div>
+      <div class="tab" data-tab="ach">Achievements</div>
+      <div class="tab" data-tab="profile">Profile</div>
+    </div>
+    <div id="goals-body" class="goals-body"></div>
+  </div>
+</section>
+
+<!-- ====== Perfil público de un jugador ====== -->
+<section id="scr-profile" class="scr dim hidden">
+  <div class="box profile-box">
+    <div class="row end"><button class="btn small ghost" id="prof-close">Close</button></div>
+    <div id="prof-body"></div>
+  </div>
+</section>
+
+<!-- ====== Invitación recibida ====== -->
+<div id="invite-pop" class="box invite-pop hidden">
+  <div id="inv-text"></div>
+  <div class="row" style="margin-top:10px">
+    <button id="inv-yes" class="btn gold small grow" data-sfx="confirm">Join</button>
+    <button id="inv-no" class="btn ghost small">No, thanks</button>
+  </div>
+</div>
+
+<!-- ====== Colección ====== -->
+<section id="scr-dex" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Pokémon <span id="dex-total" class="sub" style="font-size:15px"></span></h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="gen-tabs" id="dex-gens"></div>
+    <div class="split" style="margin-top:8px">
+      <div>
+        <div class="filters" id="dex-filters"></div>
+        <div class="grid" id="dex-grid"></div>
+      </div>
+      <div class="panel" id="dex-detail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== Mejoras ====== -->
+<section id="scr-upgrades" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Upgrades</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="upg-head">
+      <canvas id="upg-stage" class="stage" width="120" height="96"></canvas>
+      <div class="grow">
+        <p class="sub" style="margin:0">Each Pokémon has its own upgrades: they only count when you play with it.</p>
+        <div class="row" style="margin-top:8px">
+          <label for="upg-mon" style="margin:0">Pokémon</label>
+          <select id="upg-mon" class="field" style="width:auto;min-width:220px"></select>
+        </div>
+      </div>
+    </div>
+    <div class="upg" id="upg-list"></div>
+  </div>
+</section>
+
+<!-- ====== Gacha ====== -->
+<section id="scr-gacha" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Gacha</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="gen-tabs" id="gacha-gens"></div>
+    <div class="split" style="margin-top:8px">
+      <div>
+        <div class="banner" id="banner">
+          <h3 id="banner-title"></h3>
+          <p id="banner-desc" style="margin:4px 0 6px"></p>
+          <p class="sub" id="gacha-owned" style="margin:0"></p>
+          <div class="feat" id="gacha-feat"></div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button id="pull-1" class="btn grow" data-sfx="none">Pull ×1 · <span id="cost-1"></span></button>
+          <button id="pull-10" class="btn gold grow" data-sfx="none">Pull ×10 · <span id="cost-10"></span></button>
+          <button id="pull-10b" class="btn gold grow" data-sfx="none">Pull ×10 · <span id="cost-10b"></span></button>
+        </div>
+        <p class="note tickets-line" id="gacha-tickets"></p>
+        <p class="note" id="gacha-pity"></p>
+      </div>
+      <div class="panel rates" id="gacha-rates"></div>
+    </div>
+  </div>
+</section>
+
+<div id="pull-fx" class="hidden">
+  <canvas id="slot" width="176" height="170" title="Click to speed up"></canvas>
+  <div class="pull-results" id="pull-results"></div>
+  <button id="pull-close" class="btn gold hidden">Continue</button>
+</div>
+
+<!-- ====== Durante la run ====== -->
+<section id="scr-levelup" class="scr dim hidden">
+  <div class="box center">
+    <h2>Level <span id="lvl-num">2</span>!</h2>
+    <p class="sub">Choose a reward · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></p>
+    <div id="cards" class="cards"></div>
+    <button id="lvl-reroll" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px">Reroll (<span id="lvl-rr-n">1</span>) · <kbd>R</kbd></button>
+    <p id="lvl-wait" class="note hidden"></p>
+  </div>
+</section>
+
+<section id="scr-bond" class="scr dim hidden">
+  <div class="box center">
+    <h2 class="bond-title">Bond!</h2>
+    <p class="sub bond-hint">Bonded moves fire at the same time and take a single slot</p>
+    <p id="bond-sub" class="sub"></p>
+    <div id="bond-cards" class="cards"></div>
+    <div class="row" style="justify-content:center"><button id="bond-back" class="btn hidden">Back</button></div>
+  </div>
+</section>
+
+<section id="scr-item" class="scr dim hidden">
+  <div class="box center">
+    <h2>An item!</h2>
+    <p class="sub">You can only hold one · <kbd>1</kbd> <kbd>2</kbd></p>
+    <div id="item-cards" class="cards"></div>
+  </div>
+</section>
+
+<section id="scr-pause" class="scr dim hidden">
+  <div class="box center" style="width:min(460px,100%)">
+    <h2>Pause</h2>
+    <p class="sub kbd-hint"><kbd>WASD</kbd> move · <kbd>1</kbd>–<kbd>4</kbd> move · <kbd>Q</kbd>/<kbd>E</kbd> cycle · <kbd>Esc</kbd> pause</p>
+    <p class="sub touch-hint">Drag your finger to move · tap a move to switch</p>
+    <p id="pause-coop" class="note hidden">Group game: the game keeps running while you're here.</p>
+    <div id="pause-sound" class="sound-inline"></div>
+    <div class="row" style="justify-content:center">
+      <button id="btn-resume" class="btn gold">Continue</button>
+      <button id="btn-pause-settings" class="btn">Settings</button>
+      <button id="btn-quit" class="btn">Quit run</button>
+    </div>
+  </div>
+</section>
+
+<section id="scr-over" class="scr dim hidden">
+  <div class="box center" style="width:min(480px,100%)">
+    <h2 id="over-title">You fell…</h2>
+    <div id="over-stats" class="stats"></div>
+    <button id="btn-again" class="btn gold">Back to menu</button>
+  </div>
+</section>
+
+<!-- datos generados -->
+<script defer src="js/app.min.js?v=a3c986907a"></script>
+</body>
+</html>
