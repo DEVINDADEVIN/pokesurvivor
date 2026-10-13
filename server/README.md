@@ -52,3 +52,30 @@ Reference: https://solana.com/docs/rpc/http/sendtransaction and https://solana.c
 Co-op is excluded. Paused gameplay and upgrade choice add no survival time. A run spanning a boundary starts a fresh segment; the server discards the observation spanning the boundary to avoid crediting old kills to a new round (normally at most a two-second heartbeat). A ranked connection interrupted for more than 30 seconds must start a new run. Local practice history is limited to 20 completed rounds on that browser, and is editable by that browser; it never awards SOL. Shared rankings refresh every ten seconds. Ties use survival time, then time achieved, then wallet address. Multiple wallets per human cannot currently be prevented; further tournament eligibility/anti-abuse controls are needed for a public funded launch.
 
 HTTP rate limiting is basic and per socket address (no trust in spoofable forwarded headers); configure proper per-client limits at the hosting edge for scale. The server uses one SQLite writer and is not designed for horizontally scaled replicas. API data is never service-worker cached.
+
+
+## Developer control panel
+
+The Node server serves `/dev`. Connect the wallet configured in `ADMIN_WALLET`
+(default public address: N8LgWo2TRgtwj8qvc7WcTapLx1XrunQrEssH82t8Wg6), then sign the
+explicit developer administration message. Regular game sessions cannot change
+settings. Admin sessions expire after ten minutes and are kept in memory by the
+browser. No private keys are entered in the panel.
+
+The SQLite database initializes a **0.4 SOL cumulative prize budget**. This is not
+a wallet balance, daily allowance, or automatic refill. Paid and reserved payouts
+consume this budget permanently; uncertain/failed transfers remain reserved for
+manual reconciliation. Network fees are additional. The budget can never be
+lowered below committed funds. Raising it allows pending unsigned rounds to pay.
+An additional DAILY_PAYOUT_CAP_LAMPORTS guard still applies.
+
+Prizes are snapshotted when a round opens. Edited prizes apply to the next round;
+existing rounds and queued payouts retain their original prizes. Changes are
+versioned and audited in SQLite. Back up the database and use persistent storage:
+deleting it loses budget accounting. Only one server replica is supported.
+
+Configure TREASURY_WALLET to match the signing key's public address. Never send a
+private key or recovery phrase in chat. The panel cannot enable payments or set
+secrets. Deployment, a trusted gameplay verifier, secure signing configuration,
+and a funded treasury remain prerequisites; this panel alone does not activate
+real rewards. Static Sites hosting does not run this Node backend or `/dev`.

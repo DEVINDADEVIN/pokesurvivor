@@ -1,3 +1,4 @@
+import {initializeSettings,settings} from './admin.mjs';
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID, createHash } from 'node:crypto';
 export const PERIOD=600000, PRIZES=[10000000,6000000,3000000];
@@ -15,6 +16,7 @@ export class Tournament {
       CREATE TABLE IF NOT EXISTS payouts(round INTEGER PRIMARY KEY,status TEXT NOT NULL,winners TEXT NOT NULL,amount INTEGER NOT NULL,signature TEXT,raw TEXT,lastHeight INTEGER,error TEXT,day INTEGER NOT NULL);
       CREATE TABLE IF NOT EXISTS challenges(id TEXT PRIMARY KEY,wallet TEXT,message TEXT,expires INTEGER);
       CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,wallet TEXT,expires INTEGER);`);
+    initializeSettings(this);
   }
   all(sql,...args){return this.db.prepare(sql).all(...args);}
   one(sql,...args){return this.db.prepare(sql).get(...args);}
@@ -24,13 +26,16 @@ export class Tournament {
     const now=this.clock(),round=roundAt(now);
     this.atomic(()=>{
       this.exec('INSERT OR IGNORE INTO rounds(id) VALUES(?)',round);
+      this.exec('INSERT OR IGNORE INTO round_prizes VALUES(?,?)',round,JSON.stringify(settings(this).prizes));
       for(const r of this.all("SELECT id FROM rounds WHERE status='open' AND id<?",round)){
-        const winners=this.all('SELECT * FROM verified WHERE round=? ORDER BY score DESC,seconds DESC,achievedAt ASC,wallet ASC LIMIT 3',r.id).map((e,i)=>({...e,lamports:PRIZES[i]}));
+        const prizes=JSON.parse(this.one('SELECT prizes FROM round_prizes WHERE round=?',r.id)?.prizes||JSON.stringify(PRIZES));
+        const winners=this.all('SELECT * FROM verified WHERE round=? ORDER BY score DESC,seconds DESC,achievedAt ASC,wallet ASC LIMIT 3',r.id).map((e,i)=>({...e,lamports:prizes[i]}));
         this.exec("INSERT OR IGNORE INTO payouts(round,status,winners,amount,day) VALUES(?,?,?,?,?)",r.id,winners.length?'queued':'empty',JSON.stringify(winners),winners.reduce((s,w)=>s+w.lamports,0),Math.floor(now/86400000));
         this.exec("UPDATE rounds SET status='closed' WHERE id=?",r.id);
       }
       this.exec('DELETE FROM challenges WHERE expires<?',now);
       this.exec('DELETE FROM sessions WHERE expires<?',now);
+      this.exec('DELETE FROM admin_sessions WHERE expires<?',now);
     });
     return round;
   }
@@ -73,5 +78,5 @@ export class Tournament {
       this.exec("UPDATE entries SET status='verified' WHERE round=? AND wallet=?",round,wallet);return{verified:true};
     });
   }
-  board(){const round=this.tick();return{serverTime:this.clock(),round,prizes:PRIZES,entries:this.all('SELECT * FROM entries WHERE round=? ORDER BY score DESC,seconds DESC,achievedAt ASC,wallet ASC LIMIT 100',round),history:this.all('SELECT * FROM payouts ORDER BY round DESC LIMIT 20').map(p=>({round:p.round,status:p.status,signature:p.signature,entries:JSON.parse(p.winners)}))};}
+  board(){const round=this.tick();return{serverTime:this.clock(),round,prizes:JSON.parse(this.one('SELECT prizes FROM round_prizes WHERE round=?',round).prizes),entries:this.all('SELECT * FROM entries WHERE round=? ORDER BY score DESC,seconds DESC,achievedAt ASC,wallet ASC LIMIT 100',round),history:this.all('SELECT * FROM payouts ORDER BY round DESC LIMIT 20').map(p=>({round:p.round,status:p.status,signature:p.signature,entries:JSON.parse(p.winners)}))};}
 }

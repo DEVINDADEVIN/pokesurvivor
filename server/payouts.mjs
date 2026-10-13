@@ -1,3 +1,4 @@
+import {settings,committed} from './admin.mjs';
 import {Connection,Keypair,PublicKey,SystemProgram,Transaction} from '@solana/web3.js';
 import bs58 from 'bs58';
 import {readFileSync} from 'node:fs';
@@ -22,7 +23,7 @@ export class Payouts {
         if(current.status!=='queued')return false;
         const day=Math.floor(t.clock()/86400000);
         const spent=t.one("SELECT COALESCE(SUM(amount),0) AS amount FROM payouts WHERE day=? AND status NOT IN ('queued','empty')",day).amount;
-        if(spent+item.amount>this.cap)return false;
+        if(spent+item.amount>this.cap||committed(t)+current.amount>settings(t).budget){t.exec("UPDATE payouts SET error=? WHERE round=?","Budget limit reached; awaiting administrator adjustment",item.round);return false;}
         t.exec("UPDATE payouts SET status='preparing',day=? WHERE round=?",day,item.round);return true;
       });
       if(!claimed)return;
@@ -51,6 +52,7 @@ export async function solanaAdapter(env){
   if(genesis!==expected)throw new Error('RPC cluster does not match configuration');
   if(env.SOLANA_CLUSTER==='mainnet-beta'&&env.MAINNET_PAYMENTS_ENABLED!=='true')throw new Error('Mainnet payouts are disabled');
   const key=Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(env.SOLANA_KEYPAIR_FILE,'utf8'))));
+  if(env.TREASURY_WALLET&&key.publicKey.toBase58()!==env.TREASURY_WALLET)throw new Error('Treasury signer does not match configured public wallet');
   return{
     async prepare(winners){
       const {blockhash,lastValidBlockHeight}=await connection.getLatestBlockhash('finalized');

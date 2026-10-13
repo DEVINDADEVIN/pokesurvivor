@@ -1,3 +1,4 @@
+import {settings,updateSettings,committed} from '../admin.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Tournament,PERIOD,score} from '../core.mjs';
@@ -32,4 +33,20 @@ test('durable rounds survive process restart',async()=>{
   const dir=mkdtempSync(join(tmpdir(),'pse-test-')),file=join(dir,'db.sqlite');let time=PERIOD*100;
   let t=new Tournament(file,()=>time);const r=t.start('a','a');time+=10000;const e=t.heartbeat('a',{id:r.id,time:10,kills:3});t.verify({...e,wallet:'a'});t.db.close();time+=PERIOD;
   t=new Tournament(file,()=>time);t.tick();assert.equal(t.one('SELECT amount FROM payouts').amount,10000000);t.db.close();rmSync(dir,{recursive:true});
+});
+
+test('admin prizes apply next round; lifetime budget reserves before signing',async()=>{
+  const {t,advance}=setup();t.tick();
+  updateSettings(t,{...settings(t),budget:19000000,prizes:[9000000,6000000,3000000]},'owner');
+  assert.equal(t.board().prizes[0],10000000);
+  t.verify(entry(t,advance,'a'));advance(PERIOD);t.tick();assert.equal(t.board().prizes[0],9000000);
+  t.verify(entry(t,advance,'b'));advance(PERIOD);t.tick();
+  t.verify(entry(t,advance,'c'));advance(PERIOD);t.tick();
+  let signed=0;const p=new Payouts(t,{prepare:async()=>({raw:'x',signature:'s'+(++signed),lastHeight:10}),status:async()=>'finalized'},{enabled:true});
+  await p.tick();assert.equal(signed,2);assert.equal(committed(t),19000000);
+  assert.equal(t.one("SELECT COUNT(*) AS n FROM payouts WHERE status='queued'").n,1);
+  assert.throws(()=>updateSettings(t,{...settings(t),budget:18000000},'owner'),/cover/);
+  assert.throws(()=>updateSettings(t,{...settings(t),prizes:[1.5,1,0]},'owner'),/three/);
+  updateSettings(t,{...settings(t),budget:30000000},'owner');await p.tick();assert.equal(signed,3);
+  assert.equal(t.all('SELECT * FROM admin_audit').length,2);t.db.close();
 });

@@ -91,6 +91,7 @@ G.Tournament = (() => {
     const $=s=>panel.querySelector(s),round=remote?.round??board.round;
     const remain=Math.max(0,Math.ceil(((round+1)*PERIOD-now())/1000));
     $('#tr-round').textContent='ROUND '+round.toLocaleString('en-US');$('#tr-clock').textContent=Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0');
+    panel.querySelectorAll('.tr-podium strong').forEach((el,i)=>{el.textContent=(remote?.prizes||PRIZES)[i]/1e9+' SOL';});
     $('#tr-status').textContent=remote?remote.notice:'PRACTICE MODE — scores are stored on this device only. Prizes shown are planned amounts; no SOL is paid. The tournament server and payout wallet are not connected.';
     $('#tr-wallet').disabled=!remote;$('#tr-wallet').textContent=wallet?'Wallet: '+short(wallet):'Connect wallet';$('#tr-message').textContent=message;
     $('#tr-heading').textContent=remote?'Tournament leaderboard · provisional scores':'Practice leaderboard · this device';
