@@ -48,7 +48,7 @@ export async function solanaAdapter(env){
   if(!env.SOLANA_RPC_URL)throw new Error('Server RPC URL required');
   const connection=new Connection(env.SOLANA_RPC_URL,'finalized');
   const genesis=await connection.getGenesisHash();
-  const expected=env.SOLANA_CLUSTER==='devnet'?'EtWTRABZaYq6iMfeYKouRu166VU2xqa1':'5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
+  const expected=env.SOLANA_CLUSTER==='devnet'?'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG':'5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d';
   if(genesis!==expected)throw new Error('RPC cluster does not match configuration');
   if(env.SOLANA_CLUSTER==='mainnet-beta'&&env.MAINNET_PAYMENTS_ENABLED!=='true')throw new Error('Mainnet payouts are disabled');
   const key=loadSigner(env);
