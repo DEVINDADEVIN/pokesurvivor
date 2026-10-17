@@ -14,3 +14,7 @@
 #contract-banner button[hidden],.community-contract button[hidden]{display:none}
 #contract-banner:has(button[hidden]){grid-template-columns:auto auto;gap:12px}
 #contract-banner:has(button[hidden]) code{color:#8ce9dc;font:700 15px system-ui}
+
+.litwick-logo{display:block;width:200px;max-width:100%;height:auto;margin:0 auto 8px;border-radius:12px}
+#scr-login .litwick-logo{width:180px}
+@media(max-width:600px){.litwick-logo,#scr-login .litwick-logo{width:150px}}
