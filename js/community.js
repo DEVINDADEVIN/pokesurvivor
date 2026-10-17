@@ -1,7 +1,7 @@
 /* Set the official contract address here only after it is announced.
  * An empty value renders an honest placeholder and disables copying. */
 G.Community = (() => {
-  const CONTRACT_ADDRESS = '';
+  const CONTRACT_ADDRESS = 'dBPmAucZCzw6vfYvuHT6naxpGZAdvJYKwbkcJ7bpump';
   const card = document.createElement('aside');
   card.className='community-card';card.setAttribute('aria-label','Community and contract');
   card.innerHTML='<a class="community-twitter" href="https://x.com/PokeSurvivorSol" target="_blank" rel="noopener noreferrer"><b>𝕏</b> Follow @PokeSurvivorSol <span aria-hidden="true">↗</span></a><div class="community-contract"><span class="community-label">CONTRACT ADDRESS (CA)</span><code></code><button type="button" disabled>Copy CA</button><span class="community-copy-status" role="status"></span></div>';
