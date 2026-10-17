@@ -98,3 +98,8 @@ endpoint authenticates an external verifier; it does NOT verify gameplay.
 A funded devnet end-to-end transaction test has not been completed.
 The 0.4 SOL application cap cannot protect unrelated wallet funds if its secret
 is compromised. Signing authority covers the entire wallet.
+
+## Site access
+
+Public access is closed by default. Only an explicitly configured `SITE_ACCESS=public` reopens the game after deployment. In private mode, `/dev` provides the existing developer wallet sign-in; a successful administrator signature grants a secure, HttpOnly, same-site cookie for ten minutes. Open `/` in the same browser to play. Locking the panel revokes this session, and other wallets cannot sign in. Game files and tournament routes require an active owner session. Health monitoring uses `/healthz`; the private service worker removes the previous offline caches when visitors reconnect. Already downloaded offline copies cannot be remotely recalled. Payout processing is disabled while the site is private.
+

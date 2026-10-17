@@ -11,13 +11,14 @@ import bs58 from 'bs58';
 import {PublicKey} from '@solana/web3.js';
 import {Tournament} from './core.mjs';
 import {Payouts,solanaAdapter} from './payouts.mjs';
+import {privateSite,ownerSession,ownerCookie,privatePage,privateWorker} from './site-access.mjs';
 const env=process.env,port=Number(env.PORT||8787),origin=env.PUBLIC_ORIGIN||`http://localhost:${port}`;
 const allowedOrigins=new Set([origin,'https://pokesurvivor-tournament-production.up.railway.app',...(env.RAILWAY_PUBLIC_DOMAIN?['https://'+env.RAILWAY_PUBLIC_DOMAIN]:[])]);
 const owner=env.ADMIN_WALLET||OWNER;
 const t=new Tournament(env.DATABASE_PATH||'tournament.sqlite');
 const secret=env.SCORE_VERIFIER_SECRET||'';
 if(secret&&secret.length<32)throw new Error('Use a strong verifier secret of at least 32 characters');
-const enabled=env.PAYOUTS_ENABLED==='true';
+const enabled=!privateSite&&env.PAYOUTS_ENABLED==='true';
 if(enabled&&(!secret||env.SCORE_VERIFIER_READY!=='true'))throw new Error('Trusted score verifier must be operational before enabling payouts');
 const adapter=enabled?await solanaAdapter({...env,TREASURY_WALLET:env.TREASURY_WALLET||owner}):null;
 const dailyCap=Number(env.DAILY_PAYOUT_CAP_LAMPORTS||2736000000);
@@ -39,6 +40,19 @@ function admin(req){
 const server=http.createServer(async(req,res)=>{
   try{
     const url=new URL(req.url,origin),path=url.pathname;
+    if(path==='/healthz'&&['GET','HEAD'].includes(req.method)){reply(res,200,{ok:true});return;}
+    if(privateSite){
+      res.setHeader('Cache-Control','private, no-store');
+      res.setHeader('X-Robots-Tag','noindex, nofollow, noarchive');
+      if(path==='/sw.js'&&['GET','HEAD'].includes(req.method)){res.writeHead(200,{'Content-Type':'text/javascript','Service-Worker-Allowed':'/'});res.end(req.method==='HEAD'?undefined:privateWorker);return;}
+      if(path==='/robots.txt'&&req.method==='GET'){res.writeHead(200,{'Content-Type':'text/plain'});res.end('User-agent: *\nDisallow: /\n');return;}
+      const signInRoute=(req.method==='GET'&&['/dev','/api/tournament/admin-info'].includes(path))||(req.method==='POST'&&['/api/tournament/challenge','/api/tournament/auth','/api/tournament/logout'].includes(path));
+      if(!signInRoute&&!ownerSession(req,t,owner)){
+        if(path.startsWith('/api/'))reply(res,403,{error:'This site is private. Developer wallet authorization required.'});
+        else{res.writeHead(403,{'Content-Type':'text/html; charset=utf-8','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:privatePage);}
+        return;
+      }
+    }
     if(path==='/dev'&&req.method==='GET'){
       res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Frame-Options':'DENY','Content-Security-Policy':"default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'"});
       res.end(await readFile(new URL('./dev.html',import.meta.url)));return;
@@ -68,11 +82,17 @@ const server=http.createServer(async(req,res)=>{
     }
     if(!allowedOrigins.has(req.headers.origin))throw new Error('Invalid request origin');
     const data=JSON.parse(raw);
+    if(path==='/api/tournament/logout'){
+      const session=ownerSession(req,t,owner);
+      if(session)t.atomic(()=>{t.exec('DELETE FROM admin_sessions WHERE hash=?',session);t.exec('DELETE FROM sessions WHERE hash=?',session);});
+      res.setHeader('Set-Cookie',ownerCookie('',0));reply(res,200,{ok:true});return;
+    }
     if(path==='/api/tournament/admin/devnet-test'){admin(req);reply(res,200,await runDevnetTest());return;}
     if(path==='/api/tournament/admin'){
       admin(req);t.tick();updateSettings(t,data,owner);reply(res,200,{...adminState(t),paymentsEnabled:enabled,treasury:env.TREASURY_WALLET||owner});return;
     }
     if(path==='/api/tournament/challenge'){
+      if(privateSite&&data.wallet!==owner){reply(res,403,{error:'This site is private. Only the developer wallet can sign in.'});return;}
       if(data.admin===true&&data.wallet!==owner)throw new Error('Only the developer wallet may administer rewards');
       const publicKey=new PublicKey(data.wallet);if(!PublicKey.isOnCurve(publicKey.toBytes()))throw new Error('Use a signing wallet');
       const id=randomUUID(),expires=Date.now()+120000,message=`${data.admin===true?'Developer administration: authorize budget and prize changes for 10 minutes':'PokeSurvivor tournament sign-in'}\nOrigin: ${req.headers.origin}\nWallet: ${publicKey.toBase58()}\nNonce: ${id}\nExpires: ${new Date(expires).toISOString()}\nThis signature only signs in. It does not authorize a transfer.`;
@@ -80,8 +100,11 @@ const server=http.createServer(async(req,res)=>{
     }
     if(path==='/api/tournament/auth'){
       const c=t.one('SELECT * FROM challenges WHERE id=? AND expires>?',data.id,Date.now());
+      if(privateSite&&c&&c.wallet!==owner){reply(res,403,{error:'This site is private.'});return;}
       if(!c||!nacl.sign.detached.verify(Buffer.from(c.message),Buffer.from(data.signature,'base64'),bs58.decode(c.wallet)))throw new Error('Wallet signature invalid or expired');
-      const token=randomBytes(32).toString('hex');t.atomic(()=>{t.exec('DELETE FROM challenges WHERE id=?',c.id);t.exec('INSERT INTO sessions VALUES(?,?,?)',hash(token),c.wallet,Date.now()+86400000);if(c.wallet===owner&&c.message.startsWith('Developer administration:'))t.exec('INSERT INTO admin_sessions VALUES(?,?)',hash(token),Date.now()+600000);});reply(res,200,{token});return;
+      const token=randomBytes(32).toString('hex');t.atomic(()=>{t.exec('DELETE FROM challenges WHERE id=?',c.id);t.exec('INSERT INTO sessions VALUES(?,?,?)',hash(token),c.wallet,Date.now()+86400000);if(c.wallet===owner&&c.message.startsWith('Developer administration:'))t.exec('INSERT INTO admin_sessions VALUES(?,?)',hash(token),Date.now()+600000);});
+      if(c.wallet===owner&&c.message.startsWith('Developer administration:'))res.setHeader('Set-Cookie',ownerCookie(token));
+      reply(res,200,{token});return;
     }
     const wallet=user(req);
     if(path==='/api/tournament/runs'){reply(res,200,t.start(wallet,data.name));return;}

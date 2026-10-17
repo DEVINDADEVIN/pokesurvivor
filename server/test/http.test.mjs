@@ -9,7 +9,7 @@ import nacl from 'tweetnacl';
 test('HTTP wallet proof, replay rejection, origin isolation and payment-disabled board',async()=>{
   const dir=mkdtempSync(join(tmpdir(),'pse-http-')),port=18787,origin=`http://localhost:${port}`;
   const key=Keypair.generate(),wallet=key.publicKey.toBase58();
-  const child=spawn(process.execPath,['server/index.mjs'],{cwd:new URL('../../',import.meta.url),env:{...process.env,PORT:String(port),PUBLIC_ORIGIN:origin,DATABASE_PATH:join(dir,'db.sqlite'),ADMIN_WALLET:wallet,PAYOUTS_ENABLED:'false',SCORE_VERIFIER_SECRET:''},stdio:['ignore','pipe','pipe']});
+  const child=spawn(process.execPath,['server/index.mjs'],{cwd:new URL('../../',import.meta.url),env:{...process.env,SITE_ACCESS:'public',PORT:String(port),PUBLIC_ORIGIN:origin,DATABASE_PATH:join(dir,'db.sqlite'),ADMIN_WALLET:wallet,PAYOUTS_ENABLED:'false',SCORE_VERIFIER_SECRET:''},stdio:['ignore','pipe','pipe']});
   try{
     await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('server startup timeout')),10000);child.stdout.once('data',()=>{clearTimeout(timer);resolve();});child.once('error',reject);child.once('exit',code=>{clearTimeout(timer);reject(new Error('server exited '+code));});});
     const call=async(path,data,token,originHeader=origin)=>{const r=await fetch(origin+'/api/tournament'+path,{method:data?'POST':'GET',headers:{'Content-Type':'application/json',Origin:originHeader,...(token?{Authorization:'Bearer '+token}:{})},...(data?{body:JSON.stringify(data)}:{})});return{status:r.status,data:await r.json()};};
